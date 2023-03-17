@@ -1,7 +1,32 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-# Create your views here.
-
+#########################
+# Create index views here.
+#########################
 def index(request):
-    return HttpResponse('hh')
+    return render(request,'app/home.html')
+
+
+
+#########################
+# Create register views here.
+#########################
+def register(request):
+    return render(request,'app/register.html')
+
+
+
+#########################
+# Create login views here.
+#########################
+def login(request):
+    return render(request,'app/login.html')
+
+
+
+#########################
+# Create logout views here.
+#########################
+def logout(request):
+    pass
