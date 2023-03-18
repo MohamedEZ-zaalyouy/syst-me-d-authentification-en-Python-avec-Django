@@ -4,6 +4,15 @@ from django.contrib.auth.models import User
 #from django.contrib.auth import authenticate, login, logout
 from django.contrib import auth
 from django.contrib import messages
+from authentification import settings
+from django.core.mail import send_mail, EmailMessage
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_text
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
+from .token import generatorToken
+
+
 
 #########################
 # Create index views here.
@@ -47,7 +56,36 @@ def register(request):
         mon_utilisateur.save()
 
         messages.success(request,'Votre conpte a ete cree avec success')
+
+        #send Email de Bienvenu
+        subject = "Bienvenu dans système d'authentification"
+        message = "Bienvenue "+ mon_utilisateur.first_name + " " + mon_utilisateur.last_name + ", \n Nous somme heureux de vous compter parmi nous \n\n\n Merci"
+        from_email = settings.EMAIL_HOST_USER
+        to_list = [mon_utilisateur.email]
+        send_mail(subject, message, from_email, to_list, fail_silently= False)
+
+        #send Email de confirmation
+        current_site = get_current_site(request)
+        email_subject = "Confirm your email address"
+        contextMail = {
+            'name':mon_utilisateur.first_name,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(mon_utilisateur.first_name)),
+            'token': generatorToken.make_token(mon_utilisateur)
+        }
+        messageconfirm = render_to_string("emailconfirm.html", contextMail)
+
+        email = EmailMessage(
+            email_subject,
+            messageconfirm,
+            settings.EMAIL_HOST_USER,
+            [mon_utilisateur.email]
+        )
+
+        email.fail_silently = False
+        email.send()
         return redirect('login')
+    
     
     else:
         return render(request,'app/register.html')
