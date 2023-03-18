@@ -1,5 +1,16 @@
 {% extends 'base.html' %}
-
+{% block title %}Home{% endblock title %}
 {% block content %}
-        
+    
+    {% if user.is_authenticated %}
+    <h3>Bonjour {{firstname}}, Bienvenu sur notre système d'authentification</h3>
+    <button type="submit"><a href="{% url 'logout' %}">Se Deconecter</a></button>
+    
+    {% else %}
+
+    <button type="submit"><a href="{% url 'register' %}">S'enregistrer</a></button>
+    <button type="submit"><a href="{% url 'login' %}">Se connecter </a></button>
+
+    {% endif %}
+               
 {% endblock content %}
