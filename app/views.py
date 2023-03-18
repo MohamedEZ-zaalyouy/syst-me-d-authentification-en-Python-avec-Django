@@ -53,6 +53,7 @@ def register(request):
         mon_utilisateur = User.objects.create_user(username, email, password)
         mon_utilisateur.first_name = firstname
         mon_utilisateur.last_name = lastname
+        mon_utilisateur.is_active = False
         mon_utilisateur.save()
 
         messages.success(request,'Votre conpte a ete cree avec success')
@@ -70,7 +71,7 @@ def register(request):
         contextMail = {
             'name':mon_utilisateur.first_name,
             'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(mon_utilisateur.first_name)),
+            'uid': urlsafe_base64_encode(force_bytes(mon_utilisateur.pk)),
             'token': generatorToken.make_token(mon_utilisateur)
         }
         messageconfirm = render_to_string("emailconfirm.html", contextMail)
@@ -101,6 +102,7 @@ def login(request):
         username = request.POST['username']
         password = request.POST['password']
         user = auth.authenticate(username = username, password=password)
+        my_user = User.objects.get(username = username)
         if user is not None:
             auth.login(request, user)
             firstname = user.first_name
@@ -108,6 +110,8 @@ def login(request):
                 'firstname' : firstname,
             }
             return render(request,'app/index.html', context)
+        elif my_user.is_active == False:
+            messages.error(request,"Vous n'avez pas confirmer votre address email faite le avant de vous connecter merci!")
         else:
             messages.error(request, 'Mauvaise authentification')
             return redirect('login')
@@ -123,3 +127,23 @@ def logout(request):
     if request.user.is_authenticated:
         auth.logout(request)
         return redirect('/')
+    
+
+# Activate function 
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and generatorToken.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, "Votre conpte a ete actived felicatation!")
+        return redirect('login')
+    else:
+        messages.error(request, "Activation echoue... !")
+        return redirect('login')
+    

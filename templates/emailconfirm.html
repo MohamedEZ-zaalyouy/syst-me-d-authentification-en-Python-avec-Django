@@ -1,0 +1,10 @@
+{% autoescape off %}
+
+    Hi {{name}},
+    Welcome to our website,
+    Thank you for registering on our website! Please click the link below to confirm your email address:
+    Confirm your email address lien:
+    
+    https//{{domain}}{% url 'activate' uidb64=uid token=token %}
+    
+{% endautoescape %}
